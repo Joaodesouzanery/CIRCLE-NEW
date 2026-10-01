@@ -1,0 +1,22 @@
+# Spike de conectividade (manual): roda scripts/connectivity_check.py num runner do GitHub e salva os arquivos como artifact.
+# Objetivo: descobrir se portais .gov.br bloqueiam IPs de datacenter/fora do Brasil (hipótese NÃO confirmada).
+name: spike-conectividade
+on:
+  workflow_dispatch:
+jobs:
+  conectividade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python scripts/connectivity_check.py spike_out
+        env:
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+      - run: echo "IP de saída do runner:" && curl -s https://ifconfig.me ; echo
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spike-conectividade
+          path: spike_out/
