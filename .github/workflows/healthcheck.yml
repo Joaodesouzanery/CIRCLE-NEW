@@ -1,0 +1,22 @@
+# Dead-man's switch: se o N8N pausar (cota de execuções) ou falhar, este job FALHA e o GitHub avisa por e-mail.
+name: healthcheck
+on:
+  schedule:
+    - cron: '23 13 * * 1-5'   # 10h23 em Brasília (pode atrasar)
+  workflow_dispatch:
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fontes atrasadas
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          out=$(curl -sS --fail "$SUPABASE_URL/rest/v1/v_ingestion_health?atrasada=eq.true&select=codigo,agencia,horas_desde_ok" \
+                -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "$out"
+          n=$(echo "$out" | jq 'length')
+          if [ "$n" -gt 0 ]; then echo "::error::$n fonte(s) de dados atrasada(s)"; exit 1; fi
+          echo "OK: nenhuma fonte atrasada"

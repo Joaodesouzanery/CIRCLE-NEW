@@ -1,0 +1,28 @@
+# Coleta agendada. O agendador PRINCIPAL é o N8N (REG-01), que dispara este workflow via workflow_dispatch.
+# O cron abaixo é só RESERVA (o cron do GitHub pode atrasar e não garante horário). A coleta é idempotente.
+name: collect
+on:
+  schedule:
+    - cron: '17 11,15,19,23 * * 1-5'   # UTC (08h17, 12h17, 16h17, 20h17 em Brasília) — reserva
+  workflow_dispatch:
+    inputs:
+      agency:
+        description: 'Sigla da agência (ex.: ANTAQ) ou "all"'
+        default: 'all'
+concurrency:
+  group: collect-${{ github.event.inputs.agency || 'all' }}
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-por poppler-utils
+      - run: pip install -r collectors/requirements.txt
+      - run: python -m collectors.run --agency "${{ github.event.inputs.agency || 'all' }}"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
