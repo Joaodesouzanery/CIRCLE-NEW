@@ -22,7 +22,7 @@ export const Chip = ({ tone = 'neutral', children }: { tone?: keyof typeof tones
 
 const palette = ['#173F86', '#0E9F6E', '#7A4BD6', '#C2571A', '#0A7EA4']
 export function Avatar({ nome, fotoUrl, fotoFonte, size = 64 }: { nome: string; fotoUrl?: string | null; fotoFonte?: string | null; size?: number }) {
-  const initials = nome.split(' ').filter((p) => p.length > 2).slice(0, 2).map((p) => p[0]).join('').toUpperCase()
+  const initials = nome.replace(/\[.*?\]/g, '').split(' ').filter((p) => p && !['de', 'da', 'do', 'dos', 'das'].includes(p.toLowerCase())).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || '?'
   const bg = palette[[...nome].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length]
   // Foto só com fonte oficial registrada (docs/06); caso contrário, iniciais.
   if (fotoUrl && fotoFonte) return <img src={fotoUrl} alt={nome} title={`Fonte: ${fotoFonte}`} style={{ width: size, height: size }} className="shrink-0 rounded-full object-cover ring-4 ring-white shadow" />

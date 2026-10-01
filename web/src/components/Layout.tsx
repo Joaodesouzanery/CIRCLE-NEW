@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth'
 
 const nav = [
   { to: '/', label: 'Meus Processos', d: 'M7 3h7l5 5v13H7zM14 3v5h5' },
@@ -10,9 +11,11 @@ const crumbs: Record<string, string> = { '/': 'Meus Processos', '/agenda': 'Agen
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const { client, email, signOut } = useAuth()
+  const isDemo = client?.nome.startsWith('[DEMO]')
   return (
     <div className="min-h-screen flex">
-      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-gradient-to-b from-navy-900 to-navy-950 text-white sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-gradient-to-b from-navy-900 to-navy-950 text-white sticky top-0 h-screen self-start">
         <div className="px-5 pt-6 pb-8">
           {/* logo é branca sobre fundo preto: 'lighten' funde o preto com o azul-marinho */}
           <img src="/circle-logo.png" alt="Circle — Better Regulation" className="w-44 mix-blend-lighten" />
@@ -31,14 +34,15 @@ export default function Layout() {
         <header className="h-16 bg-white/80 backdrop-blur border-b border-black/5 flex items-center justify-between px-6 sticky top-0 z-10">
           <p className="text-sm text-ink-soft">Dashboard <span className="mx-2">›</span><span className="text-brand font-semibold">{crumbs[pathname] ?? ''}</span></p>
           <div className="flex items-center gap-3">
-            <select className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm" aria-label="Cliente"><option>CS Infra</option></select>
+            <span className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm" aria-label="Cliente">{client?.nome ?? '—'}</span>
             <button aria-label="Notificações" className="relative p-2 rounded-lg hover:bg-canvas">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M6 17V11a6 6 0 1112 0v6l1.5 2h-15zM10 21h4" /></svg>
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-bad" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-navy-900 text-white grid place-items-center text-sm font-semibold">D</div>
+            <button onClick={signOut} title={`${email ?? ''} — sair`} className="w-9 h-9 rounded-full bg-navy-900 text-white grid place-items-center text-sm font-semibold">{(email ?? '?')[0].toUpperCase()}</button>
           </div>
         </header>
+        {isDemo && <div className="bg-warn-soft text-warn text-sm font-medium px-6 py-2 border-b border-warn/20">Dados de demonstração — NUPs 99999.*, diretores e decisões fictícios. Nenhuma informação real.</div>}
         <main className="flex-1 p-6"><Outlet /></main>
         <footer className="px-6 py-4 text-xs text-ink-faint border-t border-black/5 bg-white">Análises baseadas em dados públicos e decisões anteriores. Não constituem previsão de resultado nem parecer jurídico.</footer>
       </div>
